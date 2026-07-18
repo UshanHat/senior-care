@@ -1,0 +1,24 @@
+{
+  "HomePage": {
+    "title": "Senior Care & Relief Services",
+    "subtitle": "Compassionate care for your loved ones, anytime, anywhere.",
+    "searchPlaceholder": "Search for caregivers...",
+    "findCaregiver": "Find a Caregiver"
+  },
+  "Navigation": {
+    "home": "Home",
+    "services": "Services",
+    "providers": "Providers",
+    "about": "About Us",
+    "contact": "Contact"
+  },
+  "ProviderCard": {
+    "viewProfile": "View Profile",
+    "reviews": "reviews",
+    "verified": "Verified"
+  },
+  "Auth": {
+    "login": "Login",
+    "register": "Register"
+  }
+}

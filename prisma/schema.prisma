@@ -1,0 +1,97 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PlatformAccount {
+  id              String   @id @default(uuid())
+  role            String   // 'customer' | 'provider' | 'admin'
+  name            String
+  username        String   @unique
+  email           String   @unique
+  password        String   // Passwords MUST be hashed (e.g., using bcrypt)
+  isEmailVerified Boolean  @default(false)
+  /// JSON string of AdminPermissions for admin accounts only
+  permissions     String?
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  provider        Provider?
+  requests        BookingRequest[]
+}
+
+model Provider {
+  id             String   @id @default(uuid())
+  ownerAccountId String   @unique
+  ownerAccount   PlatformAccount @relation(fields: [ownerAccountId], references: [id])
+  
+  approvalStatus String   // 'pending' | 'approved' | 'suspended'
+  name           String
+  category       String   // 'senior' | 'child'
+  specialty      String
+  location       String
+  country        String
+  city           String
+  currency       String
+  hourlyRate     Float
+  languages      String   // Stored as JSON string in SQLite
+  isVerified     Boolean  @default(false)
+  bio            String
+  description    String
+  
+  // Contact details stored securely - not exposed unless authorized
+  contactEmail   String
+  contactPhone   String
+  isContactPublic Boolean @default(false)
+  
+  imageUrl       String
+
+  // Relations
+  reviews        Review[]
+  availability   AvailabilitySlot[]
+  requests       BookingRequest[]
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  author     String
+  rating     Float
+  comment    String
+  date       DateTime @default(now())
+  
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+}
+
+model AvailabilitySlot {
+  id         String   @id @default(uuid())
+  date       String
+  status     String   // 'available' | 'booked' | 'holiday' | 'unavailable'
+  notes      String?
+  
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id])
+}
+
+model BookingRequest {
+  id              String   @id @default(uuid())
+  providerId      String
+  provider        Provider @relation(fields: [providerId], references: [id])
+  
+  customerId      String
+  customer        PlatformAccount @relation(fields: [customerId], references: [id])
+  
+  customerName    String
+  customerEmail   String
+  preferredTime   String
+  message         String
+  status          String   // 'pending' | 'emailed' | 'accepted' | 'declined'
+  emailSubject    String
+  emailBody       String
+  
+  createdAt       DateTime @default(now())
+}

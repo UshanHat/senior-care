@@ -53,6 +53,7 @@ type DbAccount = {
     isEmailVerified: boolean;
     createdAt: Date | string;
     permissions?: string | null;
+    accountStatus: string;
     provider?: { id: string } | null;
 };
 
@@ -126,6 +127,7 @@ export function mapSafeUser(account: DbAccount): SafeUser {
         email: account.email,
         providerId: account.provider?.id,
         isEmailVerified: account.isEmailVerified,
+        accountStatus: account.accountStatus,
         permissions:
             account.role === 'admin' ? parsePermissions(account.permissions) : undefined,
         createdAt:

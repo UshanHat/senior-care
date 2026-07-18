@@ -49,7 +49,7 @@ function PermissionToggle({
 }
 
 export default function DashboardView() {
-    const { currentUser, addAdmin, updateAdminPermissions, sendProviderVerification, approveProvider, canManage } = useAuth();
+    const { currentUser, addAdmin, updateAdminPermissions, sendProviderVerification, approveProvider, canManage, deleteAccount, updateAccountStatus } = useAuth();
     const {
         accounts,
         providers,
@@ -320,10 +320,10 @@ export default function DashboardView() {
                                                     {canManage('manageProviders') && (
                                                         <>
                                                             <button type="button" onClick={() => { void approveProvider(providerItem.id, 'approved'); }} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700">
-                                                                Approve
+                                                                Accept
                                                             </button>
                                                             <button type="button" onClick={() => { void approveProvider(providerItem.id, 'suspended'); }} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700">
-                                                                Suspend
+                                                                Decline
                                                             </button>
                                                         </>
                                                     )}
@@ -437,6 +437,50 @@ export default function DashboardView() {
                                             </div>
                                         );
                                     })}
+                                </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm xl:col-span-2">
+                                <h2 className="text-2xl font-bold text-gray-900">All User Accounts</h2>
+                                <p className="mt-2 text-sm text-gray-500">Manage all customers and providers on the platform.</p>
+                                <div className="mt-6 space-y-4">
+                                    {accounts.map((account) => (
+                                        <div key={account.id} className="rounded-2xl border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <p className="font-semibold text-gray-900">{account.name} <span className="ml-2 text-xs font-normal text-gray-500">(@{account.username})</span></p>
+                                                <p className="text-sm text-gray-500">{account.email}</p>
+                                                <div className="mt-2 flex gap-2">
+                                                    <StatusBadge label={account.role} tone="blue" />
+                                                    {account.accountStatus === 'active' && <StatusBadge label="Active" tone="green" />}
+                                                    {account.accountStatus === 'suspended' && <StatusBadge label="Suspended" tone="amber" />}
+                                                    {account.accountStatus === 'banned' && <StatusBadge label="Banned" tone="red" />}
+                                                </div>
+                                            </div>
+                                            
+                                            {canManage('manageAdmins') && account.id !== currentUser.id && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {account.accountStatus !== 'active' && (
+                                                        <button onClick={() => { void updateAccountStatus(account.id, 'active'); }} className="rounded-lg bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-200">
+                                                            Activate
+                                                        </button>
+                                                    )}
+                                                    {account.accountStatus !== 'suspended' && (
+                                                        <button onClick={() => { void updateAccountStatus(account.id, 'suspended'); }} className="rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-200">
+                                                            Suspend
+                                                        </button>
+                                                    )}
+                                                    {account.accountStatus !== 'banned' && (
+                                                        <button onClick={() => { void updateAccountStatus(account.id, 'banned'); }} className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200">
+                                                            Ban
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => { if(window.confirm('Are you sure you want to completely delete this account?')) void deleteAccount(account.id); }} className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

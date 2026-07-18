@@ -89,6 +89,8 @@ interface ProvidersContextType {
     approveProvider: (providerId: string, status: Provider['approvalStatus']) => Promise<ActionResult>;
     addAdmin: (input: AdminRegistrationInput) => Promise<ActionResult>;
     updateAdminPermissions: (adminId: string, permissions: AdminPermissions) => Promise<ActionResult>;
+    deleteAccount: (accountId: string) => Promise<ActionResult>;
+    updateAccountStatus: (accountId: string, status: string) => Promise<ActionResult>;
     canManage: (permission: PermissionKey) => boolean;
     refreshAll: () => Promise<void>;
 }
@@ -482,6 +484,46 @@ export function ProvidersProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const deleteAccount = async (accountId: string): Promise<ActionResult> => {
+        try {
+            const res = await fetch(`/api/admin/accounts/${accountId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            const data = await readJson(res);
+            if (!res.ok || !data.success) {
+                return { success: false, message: data.message || 'Failed to delete account.' };
+            }
+            if (currentUser) {
+                await loadAdmins(currentUser);
+            }
+            return { success: true, message: 'Account deleted successfully.' };
+        } catch {
+            return { success: false, message: 'Could not delete account.' };
+        }
+    };
+
+    const updateAccountStatus = async (accountId: string, status: string): Promise<ActionResult> => {
+        try {
+            const res = await fetch(`/api/admin/accounts/${accountId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status })
+            });
+            const data = await readJson(res);
+            if (!res.ok || !data.success) {
+                return { success: false, message: data.message || 'Failed to update account status.' };
+            }
+            if (currentUser) {
+                await loadAdmins(currentUser);
+            }
+            return { success: true, message: data.message || 'Account status updated.' };
+        } catch {
+            return { success: false, message: 'Could not update account status.' };
+        }
+    };
+
     return (
         <ProvidersContext.Provider
             value={{
@@ -508,6 +550,8 @@ export function ProvidersProvider({ children }: { children: React.ReactNode }) {
                 approveProvider,
                 addAdmin,
                 updateAdminPermissions,
+                deleteAccount,
+                updateAccountStatus,
                 canManage,
                 refreshAll
             }}
@@ -544,6 +588,8 @@ export function useAuth() {
         updateAdminPermissions: context.updateAdminPermissions,
         sendProviderVerification: context.sendProviderVerification,
         approveProvider: context.approveProvider,
+        deleteAccount: context.deleteAccount,
+        updateAccountStatus: context.updateAccountStatus,
         canManage: context.canManage
     };
 }

@@ -59,6 +59,7 @@ export interface SafeUser {
     isEmailVerified: boolean;
     verificationRequestedAt?: string;
     permissions?: AdminPermissions;
+    accountStatus: string; // 'active' | 'suspended' | 'banned'
     createdAt: string;
 }
 

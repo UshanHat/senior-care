@@ -127,8 +127,10 @@ export async function loadSafeUser(userId: string): Promise<SafeUser | null> {
         email: account.email,
         providerId: account.provider?.id,
         isEmailVerified: account.isEmailVerified,
-        permissions:
-            account.role === 'admin' ? parsePermissions(account.permissions) : undefined,
+        accountStatus: account.accountStatus,
+        permissions: account.role === 'admin' && account.permissions
+            ? parsePermissions(account.permissions)
+            : undefined,
         createdAt:
             account.createdAt instanceof Date
                 ? account.createdAt.toISOString()

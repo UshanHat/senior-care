@@ -74,6 +74,20 @@ export async function POST(request: Request) {
                 { status: 401 }
             );
         }
+        
+        if (account.accountStatus === 'suspended') {
+            return NextResponse.json(
+                { success: false, message: 'Your account has been suspended.' },
+                { status: 403 }
+            );
+        }
+        
+        if (account.accountStatus === 'banned') {
+            return NextResponse.json(
+                { success: false, message: 'Your account has been permanently banned.' },
+                { status: 403 }
+            );
+        }
 
         const token = await createSessionToken({
             sub: account.id,

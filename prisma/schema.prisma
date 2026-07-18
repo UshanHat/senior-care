@@ -15,8 +15,9 @@ model PlatformAccount {
   email           String   @unique
   password        String   // Passwords MUST be hashed (e.g., using bcrypt)
   isEmailVerified Boolean  @default(false)
-  /// JSON string of AdminPermissions for admin accounts only
+  // JSON string of AdminPermissions for admin accounts only
   permissions     String?
+  accountStatus   String   @default("active") // 'active' | 'suspended' | 'banned'
   createdAt       DateTime @default(now())
   
   // Relations
@@ -27,7 +28,7 @@ model PlatformAccount {
 model Provider {
   id             String   @id @default(uuid())
   ownerAccountId String   @unique
-  ownerAccount   PlatformAccount @relation(fields: [ownerAccountId], references: [id])
+  ownerAccount   PlatformAccount @relation(fields: [ownerAccountId], references: [id], onDelete: Cascade)
   
   approvalStatus String   // 'pending' | 'approved' | 'suspended'
   name           String
@@ -64,7 +65,7 @@ model Review {
   date       DateTime @default(now())
   
   providerId String
-  provider   Provider @relation(fields: [providerId], references: [id])
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 }
 
 model AvailabilitySlot {
@@ -74,16 +75,16 @@ model AvailabilitySlot {
   notes      String?
   
   providerId String
-  provider   Provider @relation(fields: [providerId], references: [id])
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 }
 
 model BookingRequest {
   id              String   @id @default(uuid())
   providerId      String
-  provider        Provider @relation(fields: [providerId], references: [id])
+  provider        Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
   
   customerId      String
-  customer        PlatformAccount @relation(fields: [customerId], references: [id])
+  customer        PlatformAccount @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
   customerName    String
   customerEmail   String

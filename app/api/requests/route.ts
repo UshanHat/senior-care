@@ -4,6 +4,7 @@ import { AuthError, loadSafeUser, requireSession } from '@/lib/auth';
 import { mapRequest } from '@/lib/mappers';
 import { parsePermissions } from '@/lib/permissions';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
+import { bookingRequestSchema } from '@/lib/validations';
 
 export async function GET(request: Request) {
     try {
@@ -66,32 +67,22 @@ export async function POST(request: Request) {
         }
 
         const ip = clientIp(request);
-        const limit = rateLimit(`request:${session.sub}:${ip}`, 20, 60 * 60 * 1000);
+        const limit = rateLimit(`booking-req:${session.sub}:${ip}`, 5, 60 * 60 * 1000); // Max 5 requests per hour
         if (!limit.allowed) {
             return NextResponse.json(
-                { success: false, message: 'Too many requests. Please try later.' },
+                { success: false, message: 'Too many booking requests. Please try again later.' },
                 { status: 429 }
             );
         }
 
         const body = await request.json();
-        const providerId = typeof body.providerId === 'string' ? body.providerId.trim() : '';
-        const preferredTime = typeof body.preferredTime === 'string' ? body.preferredTime.trim() : '';
-        const message = typeof body.message === 'string' ? body.message.trim() : '';
-
-        if (!providerId || !preferredTime || !message) {
-            return NextResponse.json(
-                { success: false, message: 'Provider, preferred time, and message are required.' },
-                { status: 400 }
-            );
+        const parsedBody = bookingRequestSchema.safeParse(body);
+        
+        if (!parsedBody.success) {
+            return NextResponse.json({ success: false, message: parsedBody.error.issues[0].message }, { status: 400 });
         }
 
-        if (message.length > 2000) {
-            return NextResponse.json(
-                { success: false, message: 'Message is too long (max 2000 characters).' },
-                { status: 400 }
-            );
-        }
+        const { providerId, preferredTime, message } = parsedBody.data;
 
         const provider = await db.provider.findUnique({ where: { id: providerId } });
         if (!provider || provider.approvalStatus !== 'approved') {

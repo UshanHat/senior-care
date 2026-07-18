@@ -7,6 +7,7 @@ import {
 } from '@/lib/auth';
 import { verifyPassword } from '@/lib/password';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
+import { loginSchema } from '@/lib/validations';
 
 export async function POST(request: Request) {
     try {
@@ -27,15 +28,16 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const identifier = typeof body.identifier === 'string' ? body.identifier.trim() : '';
-        const password = typeof body.password === 'string' ? body.password : '';
-
-        if (!identifier || !password) {
+        const parsedBody = loginSchema.safeParse(body);
+        
+        if (!parsedBody.success) {
             return NextResponse.json(
-                { success: false, message: 'Missing required fields.' },
+                { success: false, message: parsedBody.error.issues[0].message },
                 { status: 400 }
             );
         }
+
+        const { identifier, password } = parsedBody.data;
 
         // Extra limit per identifier to slow credential stuffing
         const idLimit = rateLimit(`login-id:${identifier.toLowerCase()}`, 8, 15 * 60 * 1000);
@@ -95,7 +97,8 @@ export async function POST(request: Request) {
             email: account.email,
             name: account.name,
             username: account.username,
-            providerId: account.provider?.id
+            providerId: account.provider?.id,
+            tokenVersion: account.tokenVersion
         });
 
         const user = await loadSafeUser(account.id);

@@ -17,6 +17,7 @@ export type SessionPayload = {
     name: string;
     username: string;
     providerId?: string;
+    tokenVersion: number;
 };
 
 function getSecretKey() {
@@ -37,7 +38,8 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
         email: payload.email,
         name: payload.name,
         username: payload.username,
-        providerId: payload.providerId
+        providerId: payload.providerId,
+        tokenVersion: payload.tokenVersion
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setSubject(payload.sub)
@@ -52,8 +54,18 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
             algorithms: ['HS256']
         });
 
-        if (!payload.sub || typeof payload.role !== 'string') {
+        if (!payload.sub || typeof payload.role !== 'string' || typeof payload.tokenVersion !== 'number') {
             return null;
+        }
+
+        // Database check for instant invalidation
+        const account = await db.platformAccount.findUnique({
+            where: { id: payload.sub },
+            select: { tokenVersion: true, accountStatus: true }
+        });
+
+        if (!account || account.accountStatus !== 'active' || account.tokenVersion !== payload.tokenVersion) {
+            return null; // Session revoked or account suspended
         }
 
         return {
@@ -62,7 +74,8 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
             email: String(payload.email ?? ''),
             name: String(payload.name ?? ''),
             username: String(payload.username ?? ''),
-            providerId: payload.providerId ? String(payload.providerId) : undefined
+            providerId: payload.providerId ? String(payload.providerId) : undefined,
+            tokenVersion: payload.tokenVersion
         };
     } catch {
         return null;
@@ -73,7 +86,7 @@ export function sessionCookieOptions(maxAge = SESSION_TTL_SECONDS) {
     return {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
+        sameSite: 'strict' as const,
         path: '/',
         maxAge
     };

@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import {
-    attachSessionCookie,
-    createSessionToken,
-    loadSafeUser
-} from '@/lib/auth';
+import { attachSessionCookie, createSessionToken, loadSafeUser } from '@/lib/auth';
 import { hashPassword, validatePassword } from '@/lib/password';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
 import { randomUUID } from 'crypto';
+import { registerBaseSchema, registerProviderSchema } from '@/lib/validations';
+import { z } from 'zod';
 
 function normalize(value: string) {
     return value.trim().toLowerCase();
@@ -28,40 +26,32 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const type = body.type === 'provider' ? 'provider' : body.type === 'customer' ? 'customer' : null;
-
-        if (!type) {
+        
+        let parsedBody;
+        if (body.type === 'provider') {
+            parsedBody = registerProviderSchema.safeParse(body);
+        } else if (body.type === 'customer') {
+            parsedBody = registerBaseSchema.safeParse(body);
+        } else {
             return NextResponse.json(
                 { success: false, message: 'Registration type must be customer or provider.' },
                 { status: 400 }
             );
         }
 
-        const name = typeof body.name === 'string' ? body.name.trim() : '';
-        const username = typeof body.username === 'string' ? body.username.trim() : '';
-        const email = typeof body.email === 'string' ? body.email.trim() : '';
-        const password = typeof body.password === 'string' ? body.password : '';
-
-        if (!name || !username || !email || !password) {
+        if (!parsedBody.success) {
             return NextResponse.json(
-                { success: false, message: 'Missing required fields.' },
+                { success: false, message: parsedBody.error.issues[0].message },
                 { status: 400 }
             );
         }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return NextResponse.json(
-                { success: false, message: 'Enter a valid email address.' },
-                { status: 400 }
-            );
-        }
-
-        if (username.length < 3 || username.length > 40) {
-            return NextResponse.json(
-                { success: false, message: 'Username must be 3–40 characters.' },
-                { status: 400 }
-            );
-        }
+        const data = parsedBody.data;
+        const type = data.type;
+        const name = data.name;
+        const username = data.username;
+        const email = data.email;
+        const password = data.password;
 
         const passwordCheck = validatePassword(password);
         if (!passwordCheck.ok) {
@@ -120,30 +110,18 @@ export async function POST(request: Request) {
                 }
             });
         } else {
-            const category = body.category === 'child' ? 'child' : 'senior';
-            const specialty = typeof body.specialty === 'string' ? body.specialty.trim() : '';
-            const country = typeof body.country === 'string' ? body.country.trim() : '';
-            const city = typeof body.city === 'string' ? body.city.trim() : '';
-            const currency = typeof body.currency === 'string' ? body.currency.trim() : 'LKR';
-            const bio = typeof body.bio === 'string' ? body.bio.trim() : '';
-            const description = typeof body.description === 'string' ? body.description.trim() : '';
-            const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
-            const hourlyRate = Number.parseFloat(String(body.hourlyRate ?? ''));
-
-            if (!specialty || !country || !city || !bio || !description || !phone) {
-                return NextResponse.json(
-                    { success: false, message: 'Missing provider profile fields.' },
-                    { status: 400 }
-                );
-            }
-
-            if (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 1_000_000) {
-                return NextResponse.json(
-                    { success: false, message: 'Enter a valid hourly rate.' },
-                    { status: 400 }
-                );
-            }
-
+            // Because of Zod schema checking, we know this is a valid provider body
+            const providerData = data as z.infer<typeof registerProviderSchema>;
+            
+            const category = providerData.category;
+            const specialty = providerData.specialty;
+            const country = providerData.country;
+            const city = providerData.city;
+            const currency = providerData.currency;
+            const bio = providerData.bio;
+            const description = providerData.description;
+            const phone = providerData.phone;
+            const hourlyRate = providerData.hourlyRate;
             const providerId = randomUUID();
 
             await db.platformAccount.create({
@@ -195,7 +173,8 @@ export async function POST(request: Request) {
             email: user.email,
             name: user.name,
             username: user.username,
-            providerId: user.providerId
+            providerId: user.providerId,
+            tokenVersion: 0
         });
 
         const response = NextResponse.json({

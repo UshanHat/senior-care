@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireRole, loadSafeUser } from '@/lib/auth';
+import { accountStatusSchema } from '@/lib/validations';
 
 export async function PATCH(
     request: Request,
@@ -25,15 +26,20 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const newStatus = body.status;
+        const parsedBody = accountStatusSchema.safeParse(body);
 
-        if (!['active', 'suspended', 'banned'].includes(newStatus)) {
+        if (!parsedBody.success) {
             return NextResponse.json({ success: false, message: 'Invalid status' }, { status: 400 });
         }
+        
+        const newStatus = parsedBody.data.status;
 
         await db.platformAccount.update({
             where: { id: accountId },
-            data: { accountStatus: newStatus }
+            data: { 
+                accountStatus: newStatus,
+                tokenVersion: { increment: 1 } // Invalidate their current sessions
+            }
         });
 
         return NextResponse.json({ success: true, message: `Account status updated to ${newStatus}` });

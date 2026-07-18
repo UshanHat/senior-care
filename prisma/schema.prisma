@@ -18,6 +18,7 @@ model PlatformAccount {
   // JSON string of AdminPermissions for admin accounts only
   permissions     String?
   accountStatus   String   @default("active") // 'active' | 'suspended' | 'banned'
+  tokenVersion    Int      @default(0) // Used for forced session invalidation
   createdAt       DateTime @default(now())
   
   // Relations

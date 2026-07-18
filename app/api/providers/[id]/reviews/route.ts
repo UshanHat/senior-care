@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AuthError, requireSession } from '@/lib/auth';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
+import { reviewSchema } from '@/lib/validations';
 
 export async function POST(
     request: Request,
@@ -28,22 +29,19 @@ export async function POST(
         }
 
         const body = await request.json();
-        const rating = Number(body.rating);
-        const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
+        
+        // Ensure rating is parsed as a number if it comes as a string in JSON
+        if (typeof body.rating === 'string') body.rating = Number(body.rating);
 
-        if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+        const parsedBody = reviewSchema.safeParse(body);
+        if (!parsedBody.success) {
             return NextResponse.json(
-                { success: false, message: 'Rating must be between 1 and 5.' },
+                { success: false, message: parsedBody.error.issues[0].message },
                 { status: 400 }
             );
         }
 
-        if (!comment || comment.length > 2000) {
-            return NextResponse.json(
-                { success: false, message: 'Comment is required (max 2000 characters).' },
-                { status: 400 }
-            );
-        }
+        const { rating, comment } = parsedBody.data;
 
         const provider = await db.provider.findUnique({ where: { id: providerId } });
         if (!provider || provider.approvalStatus !== 'approved') {

@@ -18,7 +18,6 @@ export async function GET(request: Request) {
         }
 
         const accounts = await db.platformAccount.findMany({
-            where: { role: 'admin' },
             include: { provider: true },
             orderBy: { createdAt: 'asc' }
         });

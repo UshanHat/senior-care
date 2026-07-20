@@ -56,6 +56,7 @@ model Provider {
   reviews        Review[]
   availability   AvailabilitySlot[]
   requests       BookingRequest[]
+  removalRequests ReviewRemovalRequest[]
 }
 
 model Review {
@@ -67,6 +68,21 @@ model Review {
   
   providerId String
   provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  
+  removalRequests ReviewRemovalRequest[]
+}
+
+model ReviewRemovalRequest {
+  id         String   @id @default(uuid())
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  
+  reason     String
+  status     String   @default("pending") // 'pending' | 'accepted' | 'rejected'
+  createdAt  DateTime @default(now())
 }
 
 model AvailabilitySlot {

@@ -148,7 +148,7 @@ export default function ProviderDetailPage({ params }: { params: Promise<{ id: s
 
                 <div className="grid gap-6 lg:grid-cols-2">
                     <AvailabilityCalendar availability={provider.availability} />
-                    <ReviewsList reviews={provider.reviews} />
+                    <ReviewsList reviews={provider.reviews} providerId={provider.id} />
                 </div>
             </main>
 

@@ -6,6 +6,16 @@ export interface Review {
     date: string;
 }
 
+export interface ReviewRemovalRequest {
+    id: string;
+    reviewId: string;
+    providerId: string;
+    reason: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    createdAt: string;
+    review?: Review; // optional relation data
+}
+
 export interface AvailabilitySlot {
     date: string;
     status: 'available' | 'booked' | 'holiday' | 'unavailable';
@@ -46,6 +56,7 @@ export interface Provider {
     reviews: Review[];
     availability: AvailabilitySlot[];
     imageUrl: string;
+    removalRequests?: ReviewRemovalRequest[];
 }
 
 /** Safe user shape returned to the client — never includes password. */

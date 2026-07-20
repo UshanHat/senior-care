@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import {
     CalendarDays,
@@ -64,6 +64,36 @@ export default function DashboardView() {
 
     const [providerTab, setProviderTab] = useState<'overview' | 'availability' | 'requests' | 'settings'>('overview');
     const [adminFeedback, setAdminFeedback] = useState('');
+    const [removalRequests, setRemovalRequests] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (currentUser?.role === 'admin') {
+            fetch('/api/admin/reviews/removal-requests')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.requests) {
+                        setRemovalRequests(data.requests);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    }, [currentUser]);
+
+    const handleRemovalAction = async (requestId: string, action: 'accept' | 'reject') => {
+        try {
+            const res = await fetch(`/api/admin/reviews/removal-requests/${requestId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+            if (res.ok) {
+                setRemovalRequests(prev => prev.filter(req => req.id !== requestId));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const [newAdmin, setNewAdmin] = useState({
         name: '',
         username: '',

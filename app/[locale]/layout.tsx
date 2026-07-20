@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import "../globals.css";
 import { ProvidersProvider } from "@/components/ProvidersContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
   title: 'Senior Care & Relief Services',
@@ -33,12 +34,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className="font-sans antialiased bg-background text-foreground">
+    <html lang={locale} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-background text-foreground transition-colors duration-300">
         <NextIntlClientProvider messages={messages}>
-          <ProvidersProvider>
-            {children}
-          </ProvidersProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <ProvidersProvider>
+              {children}
+            </ProvidersProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html >

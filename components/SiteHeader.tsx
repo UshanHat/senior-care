@@ -3,12 +3,13 @@
 import { Link } from '@/i18n/routing';
 import { LayoutDashboard, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from './ProvidersContext';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function SiteHeader() {
     const { currentUser, logout } = useAuth();
 
     return (
-        <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-6">
                     <Link href="/" className="text-lg font-bold text-primary">
@@ -68,6 +69,9 @@ export default function SiteHeader() {
                             </Link>
                         </>
                     )}
+                    <div className="ml-2 border-l border-gray-200 pl-4 dark:border-slate-700">
+                        <ThemeToggle />
+                    </div>
                 </div>
             </div>
         </header>

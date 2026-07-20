@@ -60,6 +60,20 @@
     @apply bg-background text-foreground antialiased;
   }
 
+  .dark {
+    --color-background: #0f172a;
+    /* Slate 900 */
+    --color-foreground: #f8fafc;
+    /* Slate 50 */
+    --color-card: #1e293b;
+    /* Slate 800 */
+    --color-card-foreground: #f8fafc;
+    --color-border: #334155;
+    /* Slate 700 */
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+  }
+
   h1,
   h2,
   h3,

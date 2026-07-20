@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-    identifier: z.string().min(1, 'Identifier is required'),
+    identifier: z.string().trim().min(1, 'Identifier is required'),
     password: z.string().min(1, 'Password is required')
 });
 
 export const registerBaseSchema = z.object({
     type: z.enum(['customer', 'provider']),
-    name: z.string().min(1, 'Name is required'),
-    username: z.string().min(3, 'Username must be at least 3 characters').max(40, 'Username must not exceed 40 characters'),
-    email: z.string().email('Enter a valid email address'),
+    name: z.string().trim().min(1, 'Name is required'),
+    username: z.string().trim().min(3, 'Username must be at least 3 characters').max(40, 'Username must not exceed 40 characters'),
+    email: z.string().trim().email('Enter a valid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters') // Extra validation happens in password.ts
 });
 

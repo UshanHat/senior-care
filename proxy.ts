@@ -54,6 +54,11 @@ export default async function proxy(request: NextRequest) {
         }
     }
 
+    // Bypass intlMiddleware for API routes to prevent localized redirects (e.g. /en/api/...)
+    if (pathname.startsWith('/api/')) {
+        return NextResponse.next();
+    }
+
     // Protect dashboard routes (with or without locale prefix)
     const dashboardMatch = pathname.match(/^\/(en|si|ta)\/(?:provider\/)?dashboard(?:\/|$)/);
     if (dashboardMatch) {

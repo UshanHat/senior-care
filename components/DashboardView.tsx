@@ -457,6 +457,11 @@ export default function DashboardView() {
                                                         <div>
                                                             <p className="font-semibold text-gray-900">{admin.name}</p>
                                                             <p className="text-sm text-gray-500">{admin.email}</p>
+                                                            <div className="mt-2 flex gap-2">
+                                                                {admin.accountStatus === 'active' && <StatusBadge label="Active" tone="green" />}
+                                                                {admin.accountStatus === 'suspended' && <StatusBadge label="Suspended" tone="amber" />}
+                                                                {admin.accountStatus === 'banned' && <StatusBadge label="Banned" tone="red" />}
+                                                            </div>
                                                         </div>
                                                         {admin.id === currentUser.id ? (
                                                             <StatusBadge label="Super admin" tone="blue" />
@@ -469,6 +474,28 @@ export default function DashboardView() {
                                                         <PermissionToggle label="Manage admins" checked={permissions.manageAdmins} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageAdmins: checked }); }} />
                                                         <PermissionToggle label="Manage requests" checked={permissions.manageRequests} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageRequests: checked }); }} />
                                                     </div>
+                                                    {admin.id !== currentUser.id && (
+                                                        <div className="mt-5 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                                                            {admin.accountStatus !== 'active' && (
+                                                                <button onClick={() => { void updateAccountStatus(admin.id, 'active'); }} className="rounded-lg bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-200">
+                                                                    Activate
+                                                                </button>
+                                                            )}
+                                                            {admin.accountStatus !== 'suspended' && (
+                                                                <button onClick={() => { void updateAccountStatus(admin.id, 'suspended'); }} className="rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-200">
+                                                                    Suspend
+                                                                </button>
+                                                            )}
+                                                            {admin.accountStatus !== 'banned' && (
+                                                                <button onClick={() => { void updateAccountStatus(admin.id, 'banned'); }} className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200">
+                                                                    Ban
+                                                                </button>
+                                                            )}
+                                                            <button onClick={() => { if(window.confirm('Are you sure you want to completely delete this admin account?')) void deleteAccount(admin.id); }} className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black">
+                                                                Delete Account
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}

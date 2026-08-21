@@ -154,7 +154,7 @@ export function ProvidersProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const loadAdmins = useCallback(async (user: PlatformAccount | null) => {
-        if (user?.role !== 'admin') {
+        if (user?.role !== 'admin' && user?.role !== 'super_admin') {
             setAccounts(user ? [user] : []);
             return;
         }

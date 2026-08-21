@@ -114,6 +114,9 @@ export function ProvidersProvider({ children }: { children: React.ReactNode }) {
 
     const canManage = useCallback(
         (permission: PermissionKey) => {
+            if (currentUser?.role === 'super_admin') {
+                return true;
+            }
             if (currentUser?.role !== 'admin') {
                 return false;
             }

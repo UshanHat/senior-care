@@ -28,7 +28,7 @@ export interface AdminPermissions {
     manageRequests: boolean;
 }
 
-export type UserRole = 'customer' | 'provider' | 'admin';
+export type UserRole = 'customer' | 'provider' | 'admin' | 'super_admin';
 export type ProviderApprovalStatus = 'pending' | 'approved' | 'suspended';
 export type RequestStatus = 'pending' | 'emailed' | 'accepted' | 'declined';
 

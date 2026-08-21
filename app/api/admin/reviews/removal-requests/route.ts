@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/auth';
 
 export async function GET(request: Request) {
     try {
-        await requireRole(request, ['admin']);
+        await requireRole(request, ['admin', 'super_admin']);
 
         const requests = await db.reviewRemovalRequest.findMany({
             where: { status: 'pending' },

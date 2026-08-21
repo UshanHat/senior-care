@@ -8,14 +8,14 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await requireRole(request, ['admin']);
+        const session = await requireRole(request, ['super_admin']);
         const adminAccount = await loadSafeUser(session.sub);
         
         if (!adminAccount) {
             return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
         }
         
-        if (!adminAccount.permissions?.manageAdmins) {
+        if (!adminAccount.permissions?.manageAdmins && session.role !== 'super_admin') {
             return NextResponse.json({ success: false, message: 'Forbidden: requires manageAdmins permission' }, { status: 403 });
         }
 

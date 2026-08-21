@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 
 export async function GET(request: Request) {
     try {
-        const session = await requireRole(request, ['admin']);
+        const session = await requireRole(request, ['admin', 'super_admin']);
         const admin = await loadSafeUser(session.sub);
         const permissions = admin?.permissions ?? parsePermissions(null);
 
@@ -37,11 +37,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const session = await requireRole(request, ['admin']);
+        const session = await requireRole(request, ['super_admin']);
         const admin = await loadSafeUser(session.sub);
         const permissions = admin?.permissions ?? parsePermissions(null);
 
-        if (!permissions.manageAdmins) {
+        if (!permissions.manageAdmins && session.role !== 'super_admin') {
             return NextResponse.json(
                 { success: false, message: 'You do not have permission to add admins.' },
                 { status: 403 }

@@ -7,7 +7,7 @@ export async function POST(
     context: { params: Promise<{ requestId: string }> }
 ) {
     try {
-        await requireRole(request, ['admin']);
+        await requireRole(request, ['admin', 'super_admin']);
         const { requestId } = await context.params;
 
         const body = await request.json();

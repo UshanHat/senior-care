@@ -10,7 +10,7 @@ export async function PUT(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await requireRole(request, ['admin']);
+        const session = await requireRole(request, ['super_admin']);
         const admin = await loadSafeUser(session.sub);
         const permissions = admin?.permissions ?? parsePermissions(null);
 

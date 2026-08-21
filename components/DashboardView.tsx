@@ -67,7 +67,7 @@ export default function DashboardView() {
     const [removalRequests, setRemovalRequests] = useState<any[]>([]);
 
     useEffect(() => {
-        if (currentUser?.role === 'admin') {
+        if (currentUser?.role === 'admin' || currentUser?.role === 'super_admin') {
             fetch('/api/admin/reviews/removal-requests')
                 .then(res => res.json())
                 .then(data => {
@@ -130,6 +130,8 @@ export default function DashboardView() {
         { key: 'requests', label: 'Requests', Icon: MailCheck },
         { key: 'settings', label: 'Settings', Icon: Shield }
     ];
+
+    const isAdminOrSuper = currentUser.role === 'admin' || currentUser.role === 'super_admin';
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -323,7 +325,7 @@ export default function DashboardView() {
                     </div>
                 )}
 
-                {currentUser.role === 'admin' && (
+                {isAdminOrSuper && (
                     <div className="space-y-6">
                         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
                             <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -396,79 +398,83 @@ export default function DashboardView() {
                         </div>
 
                         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                            <form
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    void (async () => {
-                                        const result = await addAdmin(newAdmin);
-                                        setAdminFeedback(result.message);
-                                        if (result.success) {
-                                            setNewAdmin({
-                                                name: '',
-                                                username: '',
-                                                email: '',
-                                                password: '',
-                                                permissions: defaultAdminPermissions
-                                            });
-                                        }
-                                    })();
-                                }}
-                                className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <UserPlus className="h-5 w-5 text-primary" />
-                                    <h2 className="text-2xl font-bold text-gray-900">Add another admin</h2>
-                                </div>
-                                {adminFeedback && (
-                                    <div className="mt-5 rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-900">
-                                        {adminFeedback}
+                            {currentUser.role === 'super_admin' && (
+                                <form
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        void (async () => {
+                                            const result = await addAdmin(newAdmin);
+                                            setAdminFeedback(result.message);
+                                            if (result.success) {
+                                                setNewAdmin({
+                                                    name: '',
+                                                    username: '',
+                                                    email: '',
+                                                    password: '',
+                                                    permissions: defaultAdminPermissions
+                                                });
+                                            }
+                                        })();
+                                    }}
+                                    className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <UserPlus className="h-5 w-5 text-primary" />
+                                        <h2 className="text-2xl font-bold text-gray-900">Add another admin</h2>
                                     </div>
-                                )}
-                                <div className="mt-6 grid gap-4">
-                                    <input required value={newAdmin.name} onChange={(event) => setNewAdmin((prev) => ({ ...prev, name: event.target.value }))} placeholder="Full name" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
-                                    <input required value={newAdmin.username} onChange={(event) => setNewAdmin((prev) => ({ ...prev, username: event.target.value }))} placeholder="Username" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
-                                    <input required type="email" value={newAdmin.email} onChange={(event) => setNewAdmin((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
-                                    <input required type="password" minLength={10} autoComplete="new-password" value={newAdmin.password} onChange={(event) => setNewAdmin((prev) => ({ ...prev, password: event.target.value }))} placeholder="Password (min 10 chars, letter + number)" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
-                                </div>
-                                <div className="mt-6 space-y-3">
-                                    <PermissionToggle label="Manage providers" checked={newAdmin.permissions.manageProviders} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageProviders: checked } }))} />
-                                    <PermissionToggle label="Manage admins" checked={newAdmin.permissions.manageAdmins} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageAdmins: checked } }))} />
-                                    <PermissionToggle label="Manage requests" checked={newAdmin.permissions.manageRequests} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageRequests: checked } }))} />
-                                </div>
-                                <button disabled={!canManage('manageAdmins')} type="submit" className="mt-6 w-full rounded-2xl bg-primary px-5 py-3 font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
-                                    Create Admin
-                                </button>
-                            </form>
+                                    {adminFeedback && (
+                                        <div className="mt-5 rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-900">
+                                            {adminFeedback}
+                                        </div>
+                                    )}
+                                    <div className="mt-6 grid gap-4">
+                                        <input required value={newAdmin.name} onChange={(event) => setNewAdmin((prev) => ({ ...prev, name: event.target.value }))} placeholder="Full name" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
+                                        <input required value={newAdmin.username} onChange={(event) => setNewAdmin((prev) => ({ ...prev, username: event.target.value }))} placeholder="Username" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
+                                        <input required type="email" value={newAdmin.email} onChange={(event) => setNewAdmin((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
+                                        <input required type="password" minLength={10} autoComplete="new-password" value={newAdmin.password} onChange={(event) => setNewAdmin((prev) => ({ ...prev, password: event.target.value }))} placeholder="Password (min 10 chars, letter + number)" className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-primary" />
+                                    </div>
+                                    <div className="mt-6 space-y-3">
+                                        <PermissionToggle label="Manage providers" checked={newAdmin.permissions.manageProviders} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageProviders: checked } }))} />
+                                        <PermissionToggle label="Manage admins" checked={newAdmin.permissions.manageAdmins} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageAdmins: checked } }))} />
+                                        <PermissionToggle label="Manage requests" checked={newAdmin.permissions.manageRequests} onChange={(checked) => setNewAdmin((prev) => ({ ...prev, permissions: { ...prev.permissions, manageRequests: checked } }))} />
+                                    </div>
+                                    <button disabled={!canManage('manageAdmins')} type="submit" className="mt-6 w-full rounded-2xl bg-primary px-5 py-3 font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
+                                        Create Admin
+                                    </button>
+                                </form>
+                            )}
 
-                            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-                                <h2 className="text-2xl font-bold text-gray-900">Existing admin permissions</h2>
-                                <div className="mt-6 space-y-4">
-                                    {adminAccounts.map((admin) => {
-                                        const permissions = admin.permissions ?? defaultAdminPermissions;
+                            {currentUser.role === 'super_admin' && (
+                                <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+                                    <h2 className="text-2xl font-bold text-gray-900">Existing admin permissions</h2>
+                                    <div className="mt-6 space-y-4">
+                                        {adminAccounts.map((admin) => {
+                                            const permissions = admin.permissions ?? defaultAdminPermissions;
 
-                                        return (
-                                            <div key={admin.id} className="rounded-2xl border border-gray-200 p-5">
-                                                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                                    <div>
-                                                        <p className="font-semibold text-gray-900">{admin.name}</p>
-                                                        <p className="text-sm text-gray-500">{admin.email}</p>
+                                            return (
+                                                <div key={admin.id} className="rounded-2xl border border-gray-200 p-5">
+                                                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                                        <div>
+                                                            <p className="font-semibold text-gray-900">{admin.name}</p>
+                                                            <p className="text-sm text-gray-500">{admin.email}</p>
+                                                        </div>
+                                                        {admin.id === currentUser.id ? (
+                                                            <StatusBadge label="Super admin" tone="blue" />
+                                                        ) : (
+                                                            <StatusBadge label="Admin" tone="green" />
+                                                        )}
                                                     </div>
-                                                    {admin.id === currentUser.id ? (
-                                                        <StatusBadge label="Current admin" tone="blue" />
-                                                    ) : (
-                                                        <StatusBadge label="Admin" tone="green" />
-                                                    )}
+                                                    <div className="space-y-3">
+                                                        <PermissionToggle label="Manage providers" checked={permissions.manageProviders} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageProviders: checked }); }} />
+                                                        <PermissionToggle label="Manage admins" checked={permissions.manageAdmins} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageAdmins: checked }); }} />
+                                                        <PermissionToggle label="Manage requests" checked={permissions.manageRequests} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageRequests: checked }); }} />
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-3">
-                                                    <PermissionToggle label="Manage providers" checked={permissions.manageProviders} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageProviders: checked }); }} />
-                                                    <PermissionToggle label="Manage admins" checked={permissions.manageAdmins} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageAdmins: checked }); }} />
-                                                    <PermissionToggle label="Manage requests" checked={permissions.manageRequests} onChange={(checked) => { void updateAdminPermissions(admin.id, { ...permissions, manageRequests: checked }); }} />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm xl:col-span-2">
                                 <h2 className="text-2xl font-bold text-gray-900">All User Accounts</h2>

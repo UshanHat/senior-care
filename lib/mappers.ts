@@ -129,7 +129,7 @@ export function mapSafeUser(account: DbAccount): SafeUser {
         isEmailVerified: account.isEmailVerified,
         accountStatus: account.accountStatus,
         permissions:
-            account.role === 'admin' ? parsePermissions(account.permissions) : undefined,
+            (account.role === 'admin' || account.role === 'super_admin') ? parsePermissions(account.permissions) : undefined,
         createdAt:
             account.createdAt instanceof Date
                 ? account.createdAt.toISOString()

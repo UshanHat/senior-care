@@ -7,7 +7,7 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await requireRole(request, ['super_admin']);
+        const session = await requireRole(request, ['admin', 'super_admin']);
         const adminAccount = await loadSafeUser(session.sub);
         
         if (!adminAccount) {
@@ -22,6 +22,15 @@ export async function DELETE(
         
         if (accountId === session.sub) {
             return NextResponse.json({ success: false, message: 'Cannot delete your own account' }, { status: 400 });
+        }
+
+        const targetAccount = await db.platformAccount.findUnique({ where: { id: accountId } });
+        if (!targetAccount) {
+            return NextResponse.json({ success: false, message: 'Account not found' }, { status: 404 });
+        }
+
+        if ((targetAccount.role === 'admin' || targetAccount.role === 'super_admin') && session.role !== 'super_admin') {
+            return NextResponse.json({ success: false, message: 'Only a Super Admin can delete other admins.' }, { status: 403 });
         }
 
         await db.platformAccount.delete({

@@ -520,7 +520,7 @@ export default function DashboardView() {
                                                 </div>
                                             </div>
                                             
-                                            {canManage('manageAdmins') && account.id !== currentUser.id && (
+                                            {canManage('manageAdmins') && account.id !== currentUser.id && ((account.role !== 'admin' && account.role !== 'super_admin') || currentUser.role === 'super_admin') && (
                                                 <div className="flex flex-wrap gap-2">
                                                     {account.accountStatus !== 'active' && (
                                                         <button onClick={() => { void updateAccountStatus(account.id, 'active'); }} className="rounded-lg bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-200">

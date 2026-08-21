@@ -8,7 +8,7 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await requireRole(request, ['super_admin']);
+        const session = await requireRole(request, ['admin', 'super_admin']);
         const adminAccount = await loadSafeUser(session.sub);
         
         if (!adminAccount) {
@@ -23,6 +23,15 @@ export async function PATCH(
         
         if (accountId === session.sub) {
             return NextResponse.json({ success: false, message: 'Cannot modify your own account status here' }, { status: 400 });
+        }
+
+        const targetAccount = await db.platformAccount.findUnique({ where: { id: accountId } });
+        if (!targetAccount) {
+            return NextResponse.json({ success: false, message: 'Account not found' }, { status: 404 });
+        }
+
+        if ((targetAccount.role === 'admin' || targetAccount.role === 'super_admin') && session.role !== 'super_admin') {
+            return NextResponse.json({ success: false, message: 'Only a Super Admin can modify other admins.' }, { status: 403 });
         }
 
         const body = await request.json();
